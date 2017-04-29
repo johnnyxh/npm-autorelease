@@ -66,38 +66,42 @@ conventionalBump({
       success('Version bumped from', oldVersion, 'to', getCurrentVersion());
       msg('Pushing...');
 
-      // Add credentials if environment variables are present
-      var repoUrl = getPkg().repository.url;
-      if (process.env.GIT_USER && process.env.GIT_PASS) {
-        var repoObj = url.parse(repoUrl);
-        repoObj.auth = process.env.GIT_USER + ':' + process.env.GIT_PASS;
-        repoUrl = url.format(repoObj);
-      }
       // Run git-release (tag & push)
       var git = require('simple-git')();
-      git.push([repoUrl])
-        .then(() => { return git.pushTags([repoUrl]) })
-        .then(() => {
-          success('Pushed.');
+      git.raw(['config', '--get', 'remote.origin.url'], (err, repoUrl) => {
+        if (err) return error('Unable to retrieve remote url. Exiting')
 
-          if (getPkg().private) {
-            msg('Publish to npm cancelled, this is a private repo.');
-            return done();
-          }
+        // Add credentials if environment variables are present
+        if (process.env.GIT_USER && process.env.GIT_PASS) {
+          var repoObj = url.parse(repoUrl);
+          repoObj.auth = process.env.GIT_USER + ':' + process.env.GIT_PASS;
+          repoUrl = url.format(repoObj);
+        }
 
-          msg('Publishing to npm...');
+        git.push([repoUrl], (err) => { if (err) return error('Unable to push new version to the repository: ' + err)})
+          .then(() => { return git.pushTags([repoUrl], (err) => { if (err) return error('Unable to push new tag to the repository: ' + err)}) })
+          .then(() => {
+            success('Pushed.');
 
-          // Publish to npm
-          var publish = spawn('npm', ['publish']);
-          publish.stdout.pipe(process.stdout);
-          publish.stderr.pipe(process.stderr);
-          publish.on('close', function (code) {
-            if (code !== 0) return error('npm publish. Exiting.');
+            if (getPkg().private) {
+              msg('Publish to npm cancelled, this is a private repo.');
+              return done();
+            }
 
-            success('Published to npm.');
-            done();
+            msg('Publishing to npm...');
 
+            // Publish to npm
+            var publish = spawn('npm', ['publish']);
+            publish.stdout.pipe(process.stdout);
+            publish.stderr.pipe(process.stderr);
+            publish.on('close', function (code) {
+              if (code !== 0) return error('npm publish. Exiting.');
+
+              success('Published to npm.');
+              done();
+
+            });
           });
-        });
+      })
     });
 });
