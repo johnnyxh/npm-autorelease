@@ -67,19 +67,20 @@ conventionalBump({
       msg('Pushing...');
 
       // Run git-release (tag & push)
-      var git = require('simple-git')();
-      git.raw(['config', '--get', 'remote.origin.url'], (err, repoUrl) => {
-        if (err) return error('Unable to retrieve remote url. Exiting')
-
+      var git = require('simple-git/promise')();
+      git.raw(['config', '--get', 'remote.origin.url'])
+      .then((repoUrl) => {
         // Add credentials if environment variables are present
+        repoUrl = repoUrl.trim();
+
         if (process.env.GIT_USER && process.env.GIT_PASS) {
           var repoObj = url.parse(repoUrl);
           repoObj.auth = process.env.GIT_USER + ':' + process.env.GIT_PASS;
           repoUrl = url.format(repoObj);
         }
 
-        git.push([repoUrl], (err) => { if (err) return error('Unable to push new version to the repository: ' + err)})
-          .then(() => { return git.pushTags([repoUrl], (err) => { if (err) return error('Unable to push new tag to the repository: ' + err)}) })
+        git.push([repoUrl])
+          .then(() => { return git.pushTags([repoUrl]); })
           .then(() => {
             success('Pushed.');
 
@@ -101,7 +102,13 @@ conventionalBump({
               done();
 
             });
+          })
+          .catch((err) => {
+              return error('Error occurred with git operations. Exiting.');
           });
       })
-    });
+      .catch((err) => {
+         return error('Error retrieving repository url. Exiting.') 
+      });
+  });
 });
