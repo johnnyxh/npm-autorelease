@@ -80,7 +80,7 @@ conventionalBump({
         }
 
         git.push([repoUrl])
-          .then(() => { return git.pushTags([repoUrl]); })
+          .then(() => { return git.push([repoUrl, '--tags']); })
           .then(() => {
             success('Pushed.');
 
@@ -108,7 +108,7 @@ conventionalBump({
           });
       })
       .catch((err) => {
-         return error('Error retrieving repository url. Exiting.') 
+         return error('Error retrieving repository url. Exiting.')
       });
   });
 });
