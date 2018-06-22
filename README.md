@@ -23,6 +23,10 @@ You may also set the following environment variables (useful for CI Pipeline too
 - `GIT_USER` - A user to push the release and tags under
 - `GIT_PASS` - A token or password for the user
 
+## Options
+
+- `--dry-run` - Output only the recommended release type for the current repo without applying any commits, tags or releases to your project.
+
 ## License
 
 MIT

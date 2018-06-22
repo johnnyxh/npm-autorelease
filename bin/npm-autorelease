@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 
 var spawn = require('cross-spawn').spawn,
-    exec = require('child_process').exec,
     url = require('url'),
     conventionalBump = require('conventional-recommended-bump'),
     path = require('path'),
     fs = require('fs'),
-    argv = require('optimist').argv,
     colors = require('colors'),
-    releasePath = path.resolve(__dirname, './git-release');
+    argv = require('minimist')(process.argv.slice(2));
 
 var exit = function (str) {
   console.log([].slice.call(arguments).join(' ').red);
@@ -51,6 +49,8 @@ if (!oldVersion) error('No version in package.json found.');
 conventionalBump({
     preset: 'angular'
 }, function(err, result) {
+    if (argv['dry-run']) return msg('Recommended release: ' + result.releaseType);
+
     msg('Creating a ' + result.releaseType + ' release');
 
     // Run npm verison (tags & commits)
