@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-var spawn = require('cross-spawn').spawn,
+var spawn = require('cross-spawn'),
     url = require('url'),
     conventionalBump = require('conventional-recommended-bump'),
     path = require('path'),
